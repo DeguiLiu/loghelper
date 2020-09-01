@@ -15,5 +15,5 @@
 - 主要是利用了C++构造和自动析构的机制，并8.重载<<操作符来保留使用习惯；
 - 在析构构造函数中，组织消息拼接；
 - 根据使用的宏将拼接好的消息交给不同日志输出模块
-- 借鉴github的Boost.Log封装，[boost_log_example](https://github.com/contaconta/boost_log_example) 和 [simpleLogger](https://github.com/gklingler/simpleLogger）
+- 借鉴github的Boost.Log封装，[boost_log_example](https://github.com/contaconta/boost_log_example) 和 [simpleLogger]( https://github.com/gklingler/simpleLogger）
 
