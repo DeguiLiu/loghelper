@@ -30,5 +30,6 @@ cd ..
 cp -r conf/*  bin/
 cp -r lib/*.so bin/
 
+tar -cvzf loghelper_release.tar.gz bin include
 
 echo "build end"

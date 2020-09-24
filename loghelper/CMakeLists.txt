@@ -9,7 +9,7 @@ endif()
 
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
 	set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g -ggdb")
-	set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3-Wall")
+	set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
 endif()
 
 include( CheckCXXCompilerFlag )
@@ -18,7 +18,7 @@ if( COMPILER_SUPPORTS_CXX11 )
     if( CMAKE_COMPILER_IS_GNUCXX )
         set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11" )
     else()
-        set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11" )
+        set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
     endif()
 endif()
 
@@ -41,17 +41,15 @@ add_library( ${PROJECT_NAME} SHARED ${DIR_SRCS} ${HEADER_FILES})
 
 
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
-	add_definitions(-DROCK_LINUX_PLATFORM -DBOOST_LOG_DYN_LINK -DUse_SysLog)
+        add_definitions(-DROCK_LINUX_PLATFORM -DBOOST_LOG_DYN_LINK)
 	target_link_libraries(${PROJECT_NAME}
 	pthread
-	boost_thread
 	boost_system
 	boost_log
 )
 elseif (CMAKE_SYSTEM_NAME MATCHES "Windows")  
     MESSAGE(STATUS "current platform: Windows")  
 	add_definitions( /DROCK_LOG_EXPORTS )
-	add_definitions( /DUse_SysLog)
 endif()
 
 ########################

@@ -1,102 +1,139 @@
-
+﻿
 #include "loghelper.h"
 #include <stdint.h>
 #include <sstream>
 #include <iostream>
-#include <thread>
-#include <mutex>
+#include "logger.hpp" // boost.log, ref:https://github.com/contaconta/boost_log_example/blob/master/logger.hpp
+#include <stdarg.h>
+#include "logconfigreader.hpp"
 
 using namespace RockLog;
 
-#ifdef Use_QDebug		// For Qt Debuging
-	#include <QDebug>	
-#endif
 
-#ifdef Use_SysLog
-	#include "logger.hpp"		// boost.log, ref:https://github.com/contaconta/boost_log_example/blob/master/logger.hpp
-#endif
-
-LogHelper::LogHelper(int32_t level, const char* func, uint32_t line)
-	:_level(level), _funcName(func), _lineNo(line)
+LogConfig_t *LogHelper::s_cfg = &LogConfigReader::instance().cfg();
+LogHelper::LogHelper(int32_t level, const char *func, uint32_t line)
+    : _level(level), _funcName(func), _lineNo(line)
 {
 }
 
-int LogHelper::initLogHelper(std::string& tag)
+LogHelper::LogHelper(int32_t level, const char *tag, const char *func, uint32_t line)
+    : _level(level), _tag(tag), _funcName(func), _lineNo(line)
 {
-	logger::s_SysLogTag = tag;
-	static std::once_flag flag;
-	int level;
-	std::call_once(flag, [&] { level = logger::initLogging(logger::s_SysLogTag); });
-	
-	return level;
+}
+
+LogHelper::LogHelper(int32_t level, std::string tag, const char *func, uint32_t line)
+    : _level(level), _tag(tag), _funcName(func), _lineNo(line)
+{
+}
+
+int LogHelper::initLogHelper(std::string tag)
+{
+    if (s_cfg->useBoostLog)
+    {
+        return logger::initLogging(tag);
+    }
+    else
+    {
+        return 0;
+    }
 }
 
 LogHelper::~LogHelper()
 {
-	std::ostringstream oss;
+    // 如果不使用boost.log，并且控制台日志等级大于当前等级则立即返回
+    if (!s_cfg->useBoostLog && s_cfg->consolelogLevel > _level)
+        return;
 
-#if defined (Use_QDebug) ||  defined (Use_stdout)
+    std::ostringstream oss;
 
-	switch (_level)
-	{
-	case (int32_t)kDebug:
-		oss << "[D] -";
-		break;
-	case (int32_t)kInfo:
-		oss << "[I] -";
-		break;
-	case (int32_t)kWarn:
-		oss << "[W] -";
-		break;
-	case (int32_t)kErr:
-		oss << "[E] -";
-		break;
-	case (int32_t)kDisable:
-		return;
-	default:
-		break;
-	}
+    if (!s_cfg->useBoostLog)
+    {
+        switch (_level)
+        {
+        case (int32_t)kTrace:
+            oss << "[T] -";
+            break;
+        case (int32_t)kDebug:
+            oss << "[D] -";
+            break;
+        case (int32_t)kInfo:
+            oss << "[I] -";
+            break;
+        case (int32_t)kWarn:
+            oss << "[W] -";
+            break;
+        case (int32_t)kErr:
+            oss << "[E] -";
+            break;
+        case (int32_t)kDisable:
+            return;
+        default:
+            return;
+        }
 
-#endif 
+        oss << "[" << _funcName << ":" << _lineNo << "] - "<< _ss.str();
 
-#ifdef Use_SysLog
-	std::string tag = "\"" + logger::s_SysLogTag + "\"" + " ";
-	oss << tag;
-#endif
+        std::cout << oss.str() << std::endl << std::flush;
+        oss.clear();
+    }
+    else
+    {
+        try
+        {
+            _tag = !_tag.empty() ? _tag : logger::loggerTag;
+            std::string tag = _tag;
+            tag = "\"" + tag + "\"";
+            oss << tag<< " [" << _funcName << ":" << _lineNo << "] - " << _ss.str();
 
-	oss << "[" << _funcName << ":" << _lineNo << "] - ";
-	oss << _ss.str();
+            boost::log::sources::severity_channel_logger<logger::severity_level, std::string> logger;
+            if (logger::channel_map.count(_tag) == 0)
+                logger::initLogging(_tag);
 
-#ifdef Use_QDebug
-	qDebug() << oss.str().c_str();
-#endif
+            logger = logger::channel_map[_tag];
+            switch (_level)
+            {
+            case (int32_t)kTrace:
+                BOOST_LOG_SEV(logger, logger::TRACE) << oss.str();
+                break;
+            case (int32_t)kDebug:
+                BOOST_LOG_SEV(logger, logger::DEBUG) << oss.str();
+                break;
+            case (int32_t)kInfo:
+                BOOST_LOG_SEV(logger, logger::INFO) << oss.str();
+                break;
+            case (int32_t)kWarn:
+                BOOST_LOG_SEV(logger, logger::WARNING) << oss.str();
+                break;
+            case (int32_t)kErr:
+                BOOST_LOG_SEV(logger, logger::ERROR) << oss.str();
+                break;
+            default:
+                return;
+            }
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << e.what() << '\n';
+            return;
+        }
 
-#ifdef Use_stdout
-	std::cout << oss.str() << std::endl;
-#endif
-
-#ifdef Use_SysLog
-    switch (_level)
-	{
-	case (int32_t)kDebug:
-		BOOST_LOG_SEV(app_logger::get(), logger::DEBUG) << oss.str();
-		break;
-	case (int32_t)kInfo:
-		BOOST_LOG_SEV(app_logger::get(), logger::INFO) << oss.str();
-		break;
-	case (int32_t)kWarn:
-		BOOST_LOG_SEV(app_logger::get(), logger::WARNING) << oss.str();
-		break;
-	case (int32_t)kErr:
-		BOOST_LOG_SEV(app_logger::get(), logger::ERROR) << oss.str();
-		break;
-	default:
-		return;
-	}
-#endif
+    }
+    _ss.clear();
 }
-	
 
+void rocklog(RockLog::LogLevel level, const char *func, uint32_t line, char *szFormat, ...)
+{
+    const uint32_t MAX_LOG_MSG_LEN = 6000; // 每条日志的最大长度
+    va_list pvList;
+    char msg[MAX_LOG_MSG_LEN] = {0};
+    uint32_t len = 0;
 
-
-
+    if (szFormat == NULL)
+        return;
+    va_start(pvList, szFormat);
+    len = vsprintf(msg, szFormat, pvList);
+    va_end(pvList);
+    if (len <= 0 || len >= MAX_LOG_MSG_LEN)
+        return;
+    LOG_FUNC_LINE(level, func, line) << msg;
+}

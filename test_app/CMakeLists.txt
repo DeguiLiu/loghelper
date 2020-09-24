@@ -26,16 +26,17 @@ endif()
 aux_source_directory(. DIR_SRCS)
 link_directories(${PROJECT_SOURCE_DIR}/lib)
 link_directories(${PROJECT_SOURCE_DIR}/../lib)
-include_directories(${PROJECT_SOURCE_DIR}/../loghelper)
+include_directories(${PROJECT_SOURCE_DIR}/../include)
 add_executable(${PROJECT_NAME} ${DIR_SRCS})
 
 
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
     MESSAGE(STATUS "current platform: Linux")  
-    add_definitions(-DROCK_LINUX_PLATFORM -DBOOST_LOG_DYN_LINK -DUse_SysLog)
+    add_definitions(-DROCK_LINUX_PLATFORM -DBOOST_LOG_DYN_LINK)
     target_link_libraries(${PROJECT_NAME}
         loghelper
         pthread
+        boost_filesystem
     )
 
 elseif(CMAKE_SYSTEM_NAME MATCHES "Windows")
