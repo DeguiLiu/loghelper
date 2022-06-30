@@ -57,19 +57,3 @@ UseBoostLog = true
 2020-09-24 17:38:39.170223 <ERROR> "BAR" [bar:35] - [bar] error!!
 ```
 
-### 写文件
-
-+ 使用方式
-
-  ```
-      std::string filename = std::string("abc/baz.txt");
-      std::stringstream ss;
-      ss << "a" << "|" << "b" << std::endl;
-      LOG2FILE(filename) << ss.str();  						// 1)
-      LOG2FILE(filename) << "a" << "|" << "b" << std::endl;	// 2)
-  ```
-
-如调用`Log2File::startConsumeThread();`，则开启生产者消费者机制，先将文件内容写到内存中，再由单独线程写入到文件；
-
-减少因写文件而增加的时延，多线程写文件情况下性能也更高。
-
