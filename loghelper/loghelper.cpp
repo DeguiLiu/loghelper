@@ -11,26 +11,38 @@ using namespace RockLog;
 
 
 LogConfig_t *LogHelper::s_cfg = &LogConfigReader::instance().cfg();
-LogHelper::LogHelper(int32_t level, const char *func, uint32_t line)
-    : _level(level), _funcName(func), _lineNo(line)
+LogHelper::LogHelper(int32_t level, const char *file, const char *func, uint32_t line)
+    : _level(level), _funcName(func), _lineNo(line), _fileName(file)
 {
+    if (!RockLog::LogConfigReader::instance().isInit())
+        RockLog::LogConfigReader::instance().init();
 }
 
-LogHelper::LogHelper(int32_t level, const char *tag, const char *func, uint32_t line)
-    : _level(level), _tag(tag), _funcName(func), _lineNo(line)
+LogHelper::LogHelper(int32_t level, const char *tag, const char *file, const char *func, uint32_t line)
+    : _level(level), _tag(tag), _funcName(func), _lineNo(line), _fileName(file)
 {
+    if (!RockLog::LogConfigReader::instance().isInit())
+        RockLog::LogConfigReader::instance().init();
 }
 
-LogHelper::LogHelper(int32_t level, std::string tag, const char *func, uint32_t line)
-    : _level(level), _tag(tag), _funcName(func), _lineNo(line)
+LogHelper::LogHelper(int32_t level, std::string tag, const char *file, const char *func, uint32_t line)
+    : _level(level), _tag(tag), _funcName(func), _lineNo(line), _fileName(file)
 {
+    if (!RockLog::LogConfigReader::instance().isInit())
+        RockLog::LogConfigReader::instance().init();
 }
 
 int LogHelper::initLogHelper(std::string tag)
 {
     if (s_cfg->useBoostLog)
     {
-        return logger::initLogging(tag);
+        int ret = logger::initLogging(tag);
+        if (0 != ret)
+        {
+            std::cerr << "logger::initLogging failed!" << std::endl;
+            s_cfg->useBoostLog = false;   // logger::initLogging不成功则使用默认的简单的日志输出
+        }
+        return ret;
     }
     else
     {
@@ -71,7 +83,7 @@ LogHelper::~LogHelper()
             return;
         }
 
-        oss << "[" << _funcName << ":" << _lineNo << "] - "<< _ss.str();
+        oss << "[" << _fileName << " " << _funcName << ":" << _lineNo << "] - "<< _ss.str();
 
         std::cout << oss.str() << std::endl << std::flush;
         oss.clear();
@@ -80,10 +92,13 @@ LogHelper::~LogHelper()
     {
         try
         {
-            _tag = !_tag.empty() ? _tag : logger::loggerTag;
             std::string tag = _tag;
-            tag = "\"" + tag + "\"";
-            oss << tag<< " [" << _funcName << ":" << _lineNo << "] - " << _ss.str();
+            if (!tag.empty())
+            {
+                tag = "{" + tag + "}";
+                oss << tag;
+            }
+            oss << " [" << _fileName << " " << _funcName << ":" << _lineNo << "] - " << _ss.str();
 
             boost::log::sources::severity_channel_logger<logger::severity_level, std::string> logger;
             if (logger::channel_map.count(_tag) == 0)
@@ -121,7 +136,7 @@ LogHelper::~LogHelper()
     _ss.clear();
 }
 
-void rocklog(RockLog::LogLevel level, const char *func, uint32_t line, char *szFormat, ...)
+void rocklog(RockLog::LogLevel level, const char *file, const char *func, uint32_t line, char *szFormat, ...)
 {
     const uint32_t MAX_LOG_MSG_LEN = 6000; // 每条日志的最大长度
     va_list pvList;
@@ -135,5 +150,5 @@ void rocklog(RockLog::LogLevel level, const char *func, uint32_t line, char *szF
     va_end(pvList);
     if (len <= 0 || len >= MAX_LOG_MSG_LEN)
         return;
-    LOG_FUNC_LINE(level, func, line) << msg;
+    LOG_FUNC_LINE(level, file, func, line) << msg;
 }

@@ -30,9 +30,9 @@ namespace logger
     typedef sinks::synchronous_sink<sinks::syslog_backend> sink_t;
 
     /**
-	 * @brief The severity_level enum
-	 *  Define application severity levels.
-	 */
+     * @brief The severity_level enum
+     *  Define application severity levels.
+     */
     enum severity_level
     {
         TRACE = 0,
@@ -44,10 +44,9 @@ namespace logger
         Disable
     };
 
-    #define GLOBAL_TAG "GLOBAL"
     std::mutex mtx;           // mutex for critical section
     ////// 线程局部变量 TLS
-    thread_local std::string loggerTag = GLOBAL_TAG;
+    thread_local std::string loggerTag;
     thread_local bool thread_inited = false;
     static std::map<std::string, src::severity_channel_logger<severity_level, std::string>> channel_map; // loggerTag-channel_logger
 
@@ -72,7 +71,7 @@ namespace logger
         return strm;
     }
 
-    static inline int initLogging(std::string tag = GLOBAL_TAG)
+    static inline int initLogging(std::string tag)
     {
         std::lock_guard<std::mutex> lck (mtx);
         loggerTag = tag;
@@ -81,6 +80,8 @@ namespace logger
             thread_inited = true;
             return 0;
         }
+        if (!RockLog::LogConfigReader::instance().init())
+            return -1;
         auto& cfg = RockLog::LogConfigReader::instance().cfg();
         auto console_sink = logging::add_console_log(
             std::clog,
@@ -91,7 +92,10 @@ namespace logger
                                << "> " << expr::message);
 
         std::string fileName = "logs/";
-        fileName.append(tag).append("-%Y-%m-%d_%N.log");
+        if (!tag.empty())
+            fileName.append(tag).append("_%Y-%m-%d_%N.log");
+        else
+            fileName.append("%Y-%m-%d_%N.log");
         auto file_sink = logging::add_file_log(
 
             keywords::filter = (expr::attr<std::string>("Channel") == tag) && (expr::attr<severity_level>("Severity") >= (severity_level)cfg.filelogLevel),
