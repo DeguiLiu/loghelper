@@ -105,7 +105,6 @@ void ROCK_LOG_API rocklog(RockLog::LogLevel level, const char *file, const char 
 #define LOG2(X, format, ...) rocklog(X, __FILENAME__, __FUNCTION__, __LINE__, (char *)format, ##__VA_ARGS__)
 #define LOG_TAG(X, TAG) RockLog::LogHelper(X, TAG, __FILENAME__, __FUNCTION__, __LINE__)
 #define LOG_FUNC_LINE(X, FILENAME, FUNC, LINE) RockLog::LogHelper(X, FILENAME, FUNC, LINE)
-#define LOG2FILE(filename) Log2File(filename)
 
 ///////////////// for AMS ////////////////////
 //ref:https://blog.csdn.net/10km/article/details/80216226

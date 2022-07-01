@@ -10,6 +10,7 @@ endif()
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
     set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g -ggdb")
     set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O2 -Wall")
+    ADD_DEFINITIONS(-fpermissive -fno-omit-frame-pointer -w)
 endif()
 
 include( CheckCXXCompilerFlag )
@@ -47,7 +48,7 @@ add_library( ${PROJECT_NAME} SHARED ${DIR_SRCS} ${HEADER_FILES})
 
 
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
-        add_definitions(-DROCK_LINUX_PLATFORM -DBOOST_LOG_DYN_LINK)
+    add_definitions(-DROCK_LINUX_PLATFORM -DBOOST_LOG_DYN_LINK)
 	target_link_libraries(${PROJECT_NAME}
 	pthread
 	boost_system

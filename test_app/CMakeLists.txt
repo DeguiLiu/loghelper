@@ -9,6 +9,7 @@ endif()
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
     set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g -ggdb")
     set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O2 -Wall")
+    ADD_DEFINITIONS(-fpermissive -fno-omit-frame-pointer -w)
 endif()
 
 include( CheckCXXCompilerFlag )
