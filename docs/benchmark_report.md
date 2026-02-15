@@ -70,20 +70,6 @@
 // LOG_INFO(...)  -> 正常执行
 ```
 
-## 与旧版 Boost.Log 对比
-
-旧版 loghelper (Boost.Log 后端) 的已知问题:
-- 每次 LOG 宏创建临时 LogHelper 对象 (构造+析构)
-- 析构时 std::ostringstream 格式化 + Boost.Log 分发
-- AMS_* 宏使用 std::regex 分割 {} 占位符
-- 预估单条日志延迟: 5,000-50,000 ns (取决于消息长度)
-
-新版改进:
-- 零临时对象: 直接 vsnprintf 到栈缓冲区
-- 零 regex: spdlog 使用 fmt 库, fallback 使用 printf
-- 编译期过滤: 旧版无此功能
-- 性能提升: 约 20x (spdlog) 到 100x+ (fallback 过滤模式)
-
 ## 建议
 
 - 生产环境: spdlog 后端 + `LOGHELPER_COMPILE_LEVEL=LOGHELPER_LEVEL_INFO`

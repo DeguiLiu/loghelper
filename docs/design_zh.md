@@ -1,17 +1,15 @@
-# loghelper 重构设计文档
+# loghelper 设计文档
 
 ## 1. 目标
 
-将 loghelper 从 Boost.Log 动态库重构为 C++14 header-only 日志库，支持多后端切换。
+C++14 header-only 日志库，支持多后端编译期切换。
 
 ## 2. 约束
 
 - C++14 标准，GCC/Clang
-- 不依赖 newosp（可拷贝部分 .hpp）
-- 不依赖 Boost
-- 支持 spdlog / zlog / NanoLog 后端，可编译期切换
+- 支持 spdlog / zlog 后端，可编译期切换
 - 内置 fallback 后端（零依赖，stderr 输出）
-- 保留 INI 配置文件兼容
+- INI 配置文件支持
 
 ## 3. 后端对比
 
@@ -30,7 +28,7 @@
 - 默认后端: spdlog（最成熟，header-only，FetchContent 友好）
 - 备选后端: zlog（纯 C 高性能，适合极端场景）
 - 排除 NanoLog: 需要 C++17，binary log 不适合嵌入式调试
-- 内置 fallback: 零依赖 stderr 输出（参考 mccc-bus log_macro.hpp）
+- 内置 fallback: 零依赖 stderr 输出
 
 ## 4. 架构
 
@@ -102,26 +100,16 @@ LOG_PERF_START(db_query);
 LOG_PERF_END(db_query);  // 输出: [PERF] db_query: 1234 us
 ```
 
-### 6.3 兼容旧 API
+### 6.3 AMS 风格
 
 ```cpp
-// 保留流式 API (仅 spdlog 后端)
-LOG_STREAM(kInfo) << "value=" << 42;
-
-// 保留 AMS 风格 {} 占位符 (基于 fmt，仅 spdlog)
+// AMS 风格 {} 占位符 (基于 fmt，仅 spdlog)
 AMS_INFO("value {} name {}", 42, "test");
 ```
 
-## 7. 可拷贝组件
+## 7. 配置文件格式
 
-| 来源 | 文件 | 用途 |
-|------|------|------|
-| mccc-bus | log_macro.hpp | fallback 后端基础 (编译期过滤, fprintf) |
-| newosp | platform.hpp | __FILENAME__ 宏, 编译器检测 |
-
-## 8. 配置文件格式
-
-保持 INI 兼容 (Boost.PropertyTree 替换为轻量 INI 解析器):
+INI 格式，内置轻量解析器 (~60 行):
 
 ```ini
 [Log]
@@ -137,19 +125,18 @@ SyslogLevel = 2
 
 INI 解析: 内置简单解析器 (~60 行), 不依赖外部库。
 
-## 9. 性能基准测试
+## 8. 性能基准测试
 
 测试项:
 1. 单线程吞吐量 (msg/s)
 2. 多线程吞吐量 (4 threads)
-3. 单条日志延迟 (p50/p99/max)
+3. 单条日志延迟 (avg/min/max)
 4. 编译期过滤开销 (应为零)
+5. 运行时过滤开销 (sink 丢弃)
 
-对比:
-- loghelper fallback vs spdlog vs 旧 Boost.Log 版本
-- 与 mccc-bus log_macro.hpp 对比
+详见 `docs/benchmark_report.md`。
 
-## 10. 文件结构
+## 9. 文件结构
 
 ```
 loghelper/
@@ -170,7 +157,7 @@ loghelper/
 └── README.md
 ```
 
-## 11. CMake 选项
+## 10. CMake 选项
 
 ```cmake
 option(LOGHELPER_BACKEND "Log backend: spdlog|zlog|fallback" "spdlog")

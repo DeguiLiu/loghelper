@@ -11,7 +11,7 @@ C++14 header-only logging library with pluggable backends.
 - Tagged logging for multi-module systems
 - Conditional logging (`LOG_*_IF`)
 - Performance measurement macros (`LOG_PERF_START/END`)
-- INI config file support (backward compatible with old format)
+- INI config file support
 - Thread-safe output
 - spdlog backend: fmt-style `{}` placeholders via `AMS_*` macros
 
