@@ -126,9 +126,10 @@ See `docs/benchmark_report.md` for full results.
 
 | Metric | fallback | spdlog |
 |--------|----------|--------|
-| Single-thread avg latency | ~38 ns | ~315 ns |
-| Single-thread throughput | ~26M msg/s | ~3.2M msg/s |
-| 4-thread throughput | ~200M msg/s | ~7.1M msg/s |
+| Single-thread avg latency | ~39 ns | ~249 ns |
+| Single-thread throughput | ~25.6M msg/s | ~4.0M msg/s |
+| 4-thread throughput | ~166.7M msg/s | ~10.1M msg/s |
+| Compile-time filtered | ~30 ns (clock noise) | ~31 ns (clock noise) |
 
 ## License
 
