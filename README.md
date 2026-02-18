@@ -1,6 +1,7 @@
 # loghelper
 
 [![CI](https://github.com/DeguiLiu/loghelper/actions/workflows/ci.yml/badge.svg)](https://github.com/DeguiLiu/loghelper/actions/workflows/ci.yml)
+[![Code Coverage](https://github.com/DeguiLiu/loghelper/actions/workflows/coverage.yml/badge.svg)](https://github.com/DeguiLiu/loghelper/actions/workflows/coverage.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 C++14 header-only logging library with pluggable backends.
