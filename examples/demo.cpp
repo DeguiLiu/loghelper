@@ -26,7 +26,7 @@ static void SensorTask() {
   LOG_TAG_INFO("SENSOR", "Calibration complete");
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
   // ---- Init from config file or defaults ----
   if (argc > 1) {
     std::printf("Loading config: %s\n", argv[1]);
