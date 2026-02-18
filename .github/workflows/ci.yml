@@ -20,6 +20,9 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y cmake clang-format clang-tidy cppcheck
 
+    - name: Clean build directory
+      run: rm -rf build
+
     - name: Configure CMake
       run: |
         cmake -B build \
