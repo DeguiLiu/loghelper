@@ -3,10 +3,11 @@
 //
 // demo.cpp -- loghelper usage demonstration
 
-#include <cstdio>
-#include <thread>
-
 #include "loghelper/loghelper.hpp"
+
+#include <cstdio>
+
+#include <thread>
 
 // Simulate a network module
 static void NetworkTask() {
@@ -26,7 +27,7 @@ static void SensorTask() {
   LOG_TAG_INFO("SENSOR", "Calibration complete");
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   // ---- Init from config file or defaults ----
   if (argc > 1) {
     std::printf("Loading config: %s\n", argv[1]);

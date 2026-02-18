@@ -1,0 +1,1 @@
+/usr/bin/c++ -O3 -DNDEBUG CMakeFiles/loghelper_bench.dir/tests/bench_loghelper.cpp.o -o loghelper_bench  _deps/spdlog-build/libspdlog.a 

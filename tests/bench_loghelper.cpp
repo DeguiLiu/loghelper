@@ -3,33 +3,34 @@
 //
 // bench_loghelper.cpp -- Performance benchmark for loghelper backends
 
-#include <chrono>
+#include "loghelper/loghelper.hpp"
+
 #include <cstdint>
 #include <cstdio>
+
+#include <chrono>
 #include <thread>
 #include <vector>
-
-#include "loghelper/loghelper.hpp"
 
 // ============================================================================
 // Benchmark helpers
 // ============================================================================
 
 struct BenchResult {
-  const char *name;
+  const char* name;
   int64_t total_ns;
   int32_t count;
   int64_t min_ns;
   int64_t max_ns;
 };
 
-static void PrintResult(const BenchResult &r) {
+static void PrintResult(const BenchResult& r) {
   int64_t avg_ns = r.total_ns / r.count;
   double throughput = 1e9 / static_cast<double>(avg_ns);
-  std::printf("  %-40s  avg=%6ld ns  min=%6ld ns  max=%8ld ns  "
-              "throughput=%.0f msg/s\n",
-              r.name, static_cast<long>(avg_ns), static_cast<long>(r.min_ns),
-              static_cast<long>(r.max_ns), throughput);
+  std::printf(
+      "  %-40s  avg=%6ld ns  min=%6ld ns  max=%8ld ns  "
+      "throughput=%.0f msg/s\n",
+      r.name, static_cast<long>(avg_ns), static_cast<long>(r.min_ns), static_cast<long>(r.max_ns), throughput);
 }
 
 static void PrintSeparator() {
@@ -42,7 +43,7 @@ static void PrintSeparator() {
 // Single-thread latency benchmark
 // ============================================================================
 
-static BenchResult BenchSingleThread(const char *name, int32_t count) {
+static BenchResult BenchSingleThread(const char* name, int32_t count) {
   BenchResult result{name, 0, count, INT64_MAX, 0};
 
   // Warmup
@@ -54,9 +55,7 @@ static BenchResult BenchSingleThread(const char *name, int32_t count) {
     auto start = std::chrono::high_resolution_clock::now();
     LOG_INFO("bench single-thread msg %d value=%d", i, i * 42);
     auto end = std::chrono::high_resolution_clock::now();
-    int64_t ns =
-        std::chrono::duration_cast<std::chrono::nanoseconds>(end - start)
-            .count();
+    int64_t ns = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
     result.total_ns += ns;
     if (ns < result.min_ns)
       result.min_ns = ns;
@@ -70,8 +69,7 @@ static BenchResult BenchSingleThread(const char *name, int32_t count) {
 // Multi-thread throughput benchmark
 // ============================================================================
 
-static BenchResult BenchMultiThread(const char *name, int32_t threads,
-                                    int32_t msgs_per_thread) {
+static BenchResult BenchMultiThread(const char* name, int32_t threads, int32_t msgs_per_thread) {
   int32_t total = threads * msgs_per_thread;
   BenchResult result{name, 0, total, 0, 0};
 
@@ -85,14 +83,12 @@ static BenchResult BenchMultiThread(const char *name, int32_t threads,
       }
     });
   }
-  for (auto &th : pool)
+  for (auto& th : pool)
     th.join();
 
   auto wall_end = std::chrono::high_resolution_clock::now();
-  result.total_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
-                        wall_end - wall_start)
-                        .count();
-  result.min_ns = result.total_ns / total; // approximate
+  result.total_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(wall_end - wall_start).count();
+  result.min_ns = result.total_ns / total;  // approximate
   result.max_ns = result.total_ns / total;
   return result;
 }
@@ -104,16 +100,14 @@ static BenchResult BenchMultiThread(const char *name, int32_t threads,
 // Use a macro that is guaranteed to be compiled out (level > FATAL)
 #define BENCH_COMPILED_OUT_LOG(fmt, ...) ((void)0)
 
-static BenchResult BenchCompileTimeFilter(const char *name, int32_t count) {
+static BenchResult BenchCompileTimeFilter(const char* name, int32_t count) {
   BenchResult result{name, 0, count, INT64_MAX, 0};
 
   for (int32_t i = 0; i < count; ++i) {
     auto start = std::chrono::high_resolution_clock::now();
     BENCH_COMPILED_OUT_LOG("this is compiled out %d", i);
     auto end = std::chrono::high_resolution_clock::now();
-    int64_t ns =
-        std::chrono::duration_cast<std::chrono::nanoseconds>(end - start)
-            .count();
+    int64_t ns = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
     result.total_ns += ns;
     if (ns < result.min_ns)
       result.min_ns = ns;
@@ -124,16 +118,14 @@ static BenchResult BenchCompileTimeFilter(const char *name, int32_t count) {
 }
 
 // Runtime-filtered: message formatted but sink drops it
-static BenchResult BenchRuntimeFilter(const char *name, int32_t count) {
+static BenchResult BenchRuntimeFilter(const char* name, int32_t count) {
   BenchResult result{name, 0, count, INT64_MAX, 0};
 
   for (int32_t i = 0; i < count; ++i) {
     auto start = std::chrono::high_resolution_clock::now();
     LOG_TRACE("runtime filtered msg %d", i);
     auto end = std::chrono::high_resolution_clock::now();
-    int64_t ns =
-        std::chrono::duration_cast<std::chrono::nanoseconds>(end - start)
-            .count();
+    int64_t ns = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
     result.total_ns += ns;
     if (ns < result.min_ns)
       result.min_ns = ns;
@@ -147,16 +139,14 @@ static BenchResult BenchRuntimeFilter(const char *name, int32_t count) {
 // Tagged logging benchmark
 // ============================================================================
 
-static BenchResult BenchTaggedLog(const char *name, int32_t count) {
+static BenchResult BenchTaggedLog(const char* name, int32_t count) {
   BenchResult result{name, 0, count, INT64_MAX, 0};
 
   for (int32_t i = 0; i < count; ++i) {
     auto start = std::chrono::high_resolution_clock::now();
     LOG_TAG_INFO("BENCH", "tagged msg %d", i);
     auto end = std::chrono::high_resolution_clock::now();
-    int64_t ns =
-        std::chrono::duration_cast<std::chrono::nanoseconds>(end - start)
-            .count();
+    int64_t ns = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
     result.total_ns += ns;
     if (ns < result.min_ns)
       result.min_ns = ns;
@@ -178,7 +168,7 @@ int main() {
   cfg.enable_syslog = false;
   loghelper::LogEngine::Init(cfg);
 
-  const char *backend_name = "unknown";
+  const char* backend_name = "unknown";
 #if LOGHELPER_BACKEND == LOGHELPER_BACKEND_SPDLOG
   backend_name = "spdlog";
 #elif LOGHELPER_BACKEND == LOGHELPER_BACKEND_ZLOG
@@ -199,8 +189,7 @@ int main() {
   PrintResult(r1);
 
   // 2. Multi-thread throughput (4 threads)
-  auto r2 = BenchMultiThread("Multi-thread (4T) throughput", kMultiThreads,
-                             kMultiPerThread);
+  auto r2 = BenchMultiThread("Multi-thread (4T) throughput", kMultiThreads, kMultiPerThread);
   PrintResult(r2);
 
   // 3. Tagged logging
@@ -208,20 +197,17 @@ int main() {
   PrintResult(r3);
 
   // 4. Compile-time filter (should be ~0 ns)
-  auto r4 =
-      BenchCompileTimeFilter("Compile-time filtered (noop)", kSingleCount);
+  auto r4 = BenchCompileTimeFilter("Compile-time filtered (noop)", kSingleCount);
   PrintResult(r4);
 
   // 5. Runtime filter (formatted but dropped by sink)
-  auto r5 =
-      BenchRuntimeFilter("Runtime filtered (TRACE, sink=OFF)", kSingleCount);
+  auto r5 = BenchRuntimeFilter("Runtime filtered (TRACE, sink=OFF)", kSingleCount);
   PrintResult(r5);
 
   PrintSeparator();
 
   // Summary
-  std::printf("\n  Total messages: %d\n",
-              kSingleCount * 3 + kMultiThreads * kMultiPerThread);
+  std::printf("\n  Total messages: %d\n", kSingleCount * 3 + kMultiThreads * kMultiPerThread);
   std::printf("  Backend: %s\n\n", backend_name);
 
   loghelper::LogEngine::Shutdown();

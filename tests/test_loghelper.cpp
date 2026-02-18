@@ -3,19 +3,19 @@
 //
 // test_loghelper.cpp -- Catch2 v3 unit tests for loghelper.hpp
 
-#include <catch2/catch_test_macros.hpp>
-#include <catch2/matchers/catch_matchers_string.hpp>
+#include "loghelper/loghelper.hpp"
 
 #include <cstdio>
 #include <cstring>
+
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_string.hpp>
 #include <fstream>
 #include <functional>
 #include <string>
 #include <thread>
 #include <unistd.h>
 #include <vector>
-
-#include "loghelper/loghelper.hpp"
 
 // ============================================================================
 // Helper: capture stderr output
@@ -40,8 +40,7 @@ static std::string CaptureStderr(std::function<void()> fn) {
 
   // Read captured output
   std::ifstream ifs(tmpname);
-  std::string content((std::istreambuf_iterator<char>(ifs)),
-                      std::istreambuf_iterator<char>());
+  std::string content((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
   std::remove(tmpname);
   return content;
 }
@@ -77,8 +76,7 @@ TEST_CASE("LevelToString", "[level]") {
   CHECK(std::strcmp(loghelper::LevelToString(loghelper::kFatal), "FATAL") == 0);
   CHECK(std::strcmp(loghelper::LevelToString(loghelper::kOff), "OFF") == 0);
   // Out of range
-  CHECK(std::strcmp(loghelper::LevelToString(static_cast<loghelper::Level>(99)),
-                    "?") == 0);
+  CHECK(std::strcmp(loghelper::LevelToString(static_cast<loghelper::Level>(99)), "?") == 0);
 }
 
 // ============================================================================
@@ -91,19 +89,20 @@ TEST_CASE("ParseIniFile -- valid file", "[ini]") {
   int fd = mkstemp(tmpname);
   REQUIRE(fd >= 0);
 
-  const char *ini_content = "[Log]\n"
-                            "ConsoleLevel = 1\n"
-                            "FileLevel = 0\n"
-                            "SyslogLevel = 3\n"
-                            "FileMaxSizeMB = 200\n"
-                            "FileMaxFiles = 10\n"
-                            "FilePath = /var/log/myapp\n"
-                            "SyslogAddr = 10.0.0.1\n"
-                            "SyslogPort = 1514\n"
-                            "SyslogIdent = myapp\n"
-                            "EnableConsole = 1\n"
-                            "EnableFile = 0\n"
-                            "EnableSyslog = 1\n";
+  const char* ini_content =
+      "[Log]\n"
+      "ConsoleLevel = 1\n"
+      "FileLevel = 0\n"
+      "SyslogLevel = 3\n"
+      "FileMaxSizeMB = 200\n"
+      "FileMaxFiles = 10\n"
+      "FilePath = /var/log/myapp\n"
+      "SyslogAddr = 10.0.0.1\n"
+      "SyslogPort = 1514\n"
+      "SyslogIdent = myapp\n"
+      "EnableConsole = 1\n"
+      "EnableFile = 0\n"
+      "EnableSyslog = 1\n";
   write(fd, ini_content, std::strlen(ini_content));
   close(fd);
 
@@ -131,14 +130,15 @@ TEST_CASE("ParseIniFile -- old key names (backward compat)", "[ini]") {
   int fd = mkstemp(tmpname);
   REQUIRE(fd >= 0);
 
-  const char *ini_content = "[SysLog]\n"
-                            "ConsoleLogLevel = 4\n"
-                            "FileLogLevel = 3\n"
-                            "SysLogLevel = 2\n"
-                            "FilelogMaxSize = 50\n"
-                            "FilelogMinFreeSpace = 500\n"
-                            "SysLogAddr = 192.168.1.1\n"
-                            "SysLogPort = 514\n";
+  const char* ini_content =
+      "[SysLog]\n"
+      "ConsoleLogLevel = 4\n"
+      "FileLogLevel = 3\n"
+      "SysLogLevel = 2\n"
+      "FilelogMaxSize = 50\n"
+      "FilelogMinFreeSpace = 500\n"
+      "SysLogAddr = 192.168.1.1\n"
+      "SysLogPort = 514\n";
   write(fd, ini_content, std::strlen(ini_content));
   close(fd);
 
@@ -168,12 +168,13 @@ TEST_CASE("ParseIniFile -- comments and empty lines", "[ini]") {
   int fd = mkstemp(tmpname);
   REQUIRE(fd >= 0);
 
-  const char *ini_content = "# This is a comment\n"
-                            "; Another comment\n"
-                            "\n"
-                            "[Section]\n"
-                            "ConsoleLevel = 0\n"
-                            "  # inline-ish comment line\n";
+  const char* ini_content =
+      "# This is a comment\n"
+      "; Another comment\n"
+      "\n"
+      "[Section]\n"
+      "ConsoleLevel = 0\n"
+      "  # inline-ish comment line\n";
   write(fd, ini_content, std::strlen(ini_content));
   close(fd);
 
@@ -203,8 +204,7 @@ TEST_CASE("LogEngine::Init(config)", "[engine]") {
   CHECK(loghelper::LogEngine::GetConfig().console_level == loghelper::kWarn);
 }
 
-TEST_CASE("LogEngine::Init(ini_path) -- missing file uses defaults",
-          "[engine]") {
+TEST_CASE("LogEngine::Init(ini_path) -- missing file uses defaults", "[engine]") {
   loghelper::LogEngine::Init("/nonexistent.cfg");
   CHECK(loghelper::LogEngine::IsInited());
 }
@@ -232,8 +232,7 @@ TEST_CASE("LOG_TAG_WARN includes tag", "[macro][fallback]") {
   cfg.enable_file = false;
   loghelper::LogEngine::Init(cfg);
 
-  auto output =
-      CaptureStderr([] { LOG_TAG_WARN("NET", "timeout %d ms", 500); });
+  auto output = CaptureStderr([] { LOG_TAG_WARN("NET", "timeout %d ms", 500); });
   CHECK_THAT(output, Catch::Matchers::ContainsSubstring("[NET]"));
   CHECK_THAT(output, Catch::Matchers::ContainsSubstring("WARN"));
   CHECK_THAT(output, Catch::Matchers::ContainsSubstring("timeout 500 ms"));
@@ -252,8 +251,7 @@ TEST_CASE("LOG_DEBUG_IF conditional", "[macro][fallback]") {
   CHECK(output_false.find("hidden") == std::string::npos);
 }
 
-TEST_CASE("Level filtering -- below threshold not output",
-          "[macro][fallback]") {
+TEST_CASE("Level filtering -- below threshold not output", "[macro][fallback]") {
   loghelper::LogConfig cfg;
   cfg.console_level = loghelper::kError;
   cfg.enable_file = false;
@@ -268,7 +266,7 @@ TEST_CASE("Level filtering -- below threshold not output",
   CHECK_THAT(output, Catch::Matchers::ContainsSubstring("should appear"));
 }
 
-#endif // LOGHELPER_BACKEND_FALLBACK
+#endif  // LOGHELPER_BACKEND_FALLBACK
 
 // ============================================================================
 // Multi-thread safety test
@@ -276,7 +274,7 @@ TEST_CASE("Level filtering -- below threshold not output",
 
 TEST_CASE("Multi-thread logging does not crash", "[thread]") {
   loghelper::LogConfig cfg;
-  cfg.console_level = loghelper::kOff; // suppress output
+  cfg.console_level = loghelper::kOff;  // suppress output
   cfg.enable_file = false;
   loghelper::LogEngine::Init(cfg);
 
@@ -291,7 +289,7 @@ TEST_CASE("Multi-thread logging does not crash", "[thread]") {
       }
     });
   }
-  for (auto &th : threads)
+  for (auto& th : threads)
     th.join();
   // If we get here without crash/hang, test passes
   CHECK(true);
